@@ -1,0 +1,164 @@
+play book for apache:
+ ---
+- hosts: servers
+  become: true
+
+  tasks:
+    - name: install apache2
+      apt: name=apache2 state=latest
+playbook for directory:
+
+---
+- hosts: servers
+  become: true
+
+  tasks:
+     - name: creating a directory
+       file: path=/opt/new state=directory
+play book for file creation:
+
+---
+- hosts: servers
+  become: true
+
+  tasks:
+    - name: file creation
+      file: path=/opt/roja.txt state=touch
+playbook for multiple files:
+
+---
+- hosts: servers
+  become: true
+
+  tasks:
+    - name: multiple file creation
+      file: path={{item}} state=touch
+      with_items:
+            - '/opt/f1'
+            - '/opt/f2'
+            - '/opt/f3'
+playbook for maven install:
+---
+- hosts: servers
+  become: true
+
+  tasks:
+    - name: install maven
+      apt: name=maven state=latest
+playbook for java install:
+- hosts: servers
+  become: true
+
+  tasks:
+    - name: install java-8-version
+      apt: name=openjdk-8-jdk state=present
+playbook for multiple directories:
+---
+- hosts: servers
+  become: true
+
+  tasks:
+    - name: creating multiple directories
+      file: path={{item}} state=directory
+      with_items:
+            - '/opt/dir1'
+            - '/opt/dir2'
+            - '/opt/dir3'
+playbook for tomcat install:
+---
+- hosts: servers
+  become: true
+  gather_facts: false
+  tasks:
+  - name: installing openjdk
+    apt: name=openjdk-8-jdk state=present
+
+  - name: Download Tomcat
+    get_url: 
+          url: "https://mirrors.estointernet.in/apache/tomcat/tomcat-8/v8.5.69/bin/apache-tomcat-8.5.69.tar.gz"
+          dest: /usr/local
+
+  - name: Extract the file downloaded tomcat file
+    unarchive: 
+           src: "/usr/local/apache-tomcat-8.5.69.tar.gz"
+           dest: /usr/local
+           remote_src: yes
+
+  - name: Move the Tomcat directory to a smaller one
+    command: mv /usr/local/apache-tomcat-8.5.69 /usr/local/tomcat
+
+  - name: Start Tomcat
+    command: nohup /usr/local/tomcat/bin/startup.sh & # Execute command even after you have exited from the shell prompt
+ 
+
+
+ansible playbook for lanching ec2 instance: 
+
+prerequisite: install pip  --> $sudo install python-pip         --->these steps repeate in destination servers too
+              install boto --> $pip install boto
+---
+- hosts: servers
+  connection: local
+  gather_facts: False
+  tasks:
+    - name: aws ec2 instance creation
+      ec2:
+        key_name: aws_instance_ansible
+        instance_type: t2.micro
+        image: ami-04bde106886a53080
+        wait: yes
+        region: ap-south-1
+        group_id: sg-0f57b40b3e6d1aea2
+        count: 1
+        vpc_subnet_id: default  or subnet-1543ab7e  subnet-68640713  subnet-86a4fdca
+        assign_public_ip: yes           1a              1c                1b
+        aws_access_key: AKIAYTTJMONKZ4HQZMID
+        aws_secret_key: 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
+
+
+
+ Access Key ID:AKIAYTTJMONKZ4HQZMID
+                                                 we get this code :1.Go to: http://aws.amazon.com/
+                                                                   2.Sign Up & create a new account (they'll give you the option for 1 year trial or similar)
+  Secret Access Key:lDXMvPO2SYQ1bGgE5wfBcg8t+qYazWawAIPWZR7v       3.Go to your AWS account overview
+                                                                   4.Account menu in the upper-right (has your name on it)
+                                                                   5.sub-menu: Security Credentials 
+                                                                   6.create new access key
+                                                                          new access key and secret access key created and downloaded
+                      
+                                                       
+ansible playbook for ec2 instance creation with tags: and access and secret keys place in vars.yml:
+
+$sudo vi vars.yml
+   ---
+       aws_access_key: AKIAYTTJMONKZ4HQZMID
+       aws_secret_key: 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
+
+$sudo vi ec2-instance-createWithTags.yml
+
+---
+- hosts: servers
+  gather_facts: false
+  vars_files:
+     - vars.yml
+
+  tasks:
+     - name: create ec2 instance in aws
+       ec2:
+         key_name: myfirstserver
+         instance_type: t2.micro
+         image: ami-04bde106886a53080
+         wait: yes
+         region: ap-south-1
+         group_id: sg-0f57b40b3e6d1aea2
+         count: 1
+         instance_tags:
+                Name: instancebyansible
+                os: ubuntu
+         vpc_subnet_id: subnet-86a4fdca
+         assign_public_ip: yes
+         aws_access_key: "{{ aws_access_key }}"
+         aws_secret_key: "{{ aws_secret_key }}"
+
+
+

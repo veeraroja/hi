@@ -1,0 +1,267 @@
+1.Install apache2 on ubuntu:
+----------------------------
+   step1:take ubuntu instance from AWS
+   step2:$sudo apt-get update
+   step3:$sudo apt-get install apache2
+   step4:$sudo systemctl start apache2
+   step5:In AWS ur instance security groups open port 80
+   step6:load http://public ip address then apache2 default page appear
+  successfully  apache2 installed
+
+2.Install mysql 5.7 on ubuntu:    mySQL means my Structured Query Language --Database management system
+------------------------------
+   step1:take ubuntu instance from AWS
+   step2:$sudo apt-get update
+   step3:$sudo apt-get install mysql-server
+   step4:$sudo systemctl status mysql
+   step5:Secure MySQL Installation for that $sudo mysql_secure_installation  --> after enter y select legnth of password
+                                                                                  enter password enter y and again y y all done
+   step6:for enter into mysql $sudo mysql -u root -p         -->after asking password enter ur password
+   step7:successfully enter into mysql>SELECT user,authentication_string,plugin,host FROM mysql.user;
+                                                   here root user doesn't has authentication_string so set password for root user
+   step8:set password for root user in mysql> ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '<set password>;   -->in set password place give password      
+   step9:mysql> FLUSH PRIVILEGES;
+   step10:mysql> SELECT user,authentication_string,plugin,host FROM mysql.user;  ---> successfully created password for root user
+   step11:after next time for enter into mysql directly give $mysql -u root -p
+   step12:to exit from mysql -->  mysql>quit
+
+basics of mysql:
+--------------
+      step1:first create data base --> CREATE DATABASE databasename;  to switch to that database: mysql>USE databasename;
+      step2:mysql>SHOW databaes;   -->data base list appear
+      step3:in database create tables: mysql>CREATE TABLE tablename ( id smallint unsigned not null auto_increment, name varchar(20) not null, constraint pk_data primary key (id) );
+      step4:to insert data in table : mysql>INSERT INTO tablename ( id, name ) VALUES ( null, 'Sample data' );
+      step5:mysql>SHOW tables;    --->to see tables in data base    mysql>SHOW FULL tables;   --->gives full information on tables
+      step6:SHOW TABLES LIKE 'permissions%';   --->see tables related to permissions
+      step7:direct from command line to show tables  -->  $mysql -u roja -p -e 'SHOW TABLES FROM databasename;'
+      step8:to see inside data in tables -->mysql>SELECT * FROM tablename;
+
+3 & 4.how to take mysql databases on dailybasis & how to restore database:
+---------------------------------------------------------------------------
+for create .sql files means backup mysql database:
+     $musqldump -u user -p databasename > backupdatabase.sql  ---->single database backup
+     $musqldump -u user -p --databases databasename1 databasename1 > backupdatabase1_database2.sql   --->backup multiple databases
+     $mysqldump -u user -p --all-databases > all-databases.sql          --->backup of all databases
+
+      here permission denied
+             so switch to root user sudo su then ask password for user ande successfully created .sql file
+ 
+  for restore .sql file in ur data base
+       $mysql -u user -p databasename < backupdatabase.sql  
+           here asking password of user so successfully imported backupdatabase.sql
+       open backupdatabase.sql
+            mysql>use databasename;
+            mysql>source backupdatabase.sql;
+
+5.creating new mysql users:
+---------------------------
+        step1:enter into mysql---->    mysql>CREATE USER 'roja'@'localhost' IDENTIFIED BY 'roja@123'
+              here getting error --> ERROR 1819 (HY000): Your password does not satisfy the current policy requirements
+        step2:solve this error --->   mysql>SET GLOBAL validate_password_policy=LOW;
+        step3:GRANT ALL PRIVILEGES ON * . * TO 'roja'@'%';
+        step4:FLUSH PRIVILEGES;     ----> to effect changes
+        step5:mysql>SELECT user,authentication_string,plugin,host FROM mysql.user;      ---->here we see the user name added or not  
+                                                                                                 
+6.install phpmyadmin and access from web with new mysql users:
+------------------------------------------------------------------
+            step1:sudo apt install phpmyadmin php-mbstring php-gettext     ---->next hit space and enter for select apache2  next select yes
+            step2:sudo phpenmod mbstring
+            step3:sudo systemctl restart apache2
+            step4:create user in mysql
+            step5:http://your_domain_or_IP/phpmyadmin   -->here ask username and password
+           successfully log in into phpmyadmin with new user
+Securing Your phpMyAdmin Instance:
+             $sudo vi /etc/apache2/conf-available/phpmyadmin.conf    --->in <Directory /usr/share/phpmyadmin> add line: AllowOverride All
+             $sudo systemctl restart apache2
+             $sudo vi /usr/share/phpmyadmin/.htaccess 
+                AuthType Basic
+                AuthName "Restricted Files"
+                AuthUserFile /etc/phpmyadmin/.htpasswd
+                Require valid-user
+             $sudo htpasswd -c /etc/phpmyadmin/.htpasswd roja        --->here after set password for next user no need to give -c
+
+7. create a passwordless authentication bitween servers:
+--------------------------------------------------------
+         step1:$sudo ssh-keygen     ----->after enter again enter again enter
+         step2:/root/.ssh/id_rsa.pub      --->here public key stored
+         step3:switch to root user and see public key in this path /root/.ssh/id_rsa.pub
+         step4:#ssh-copy-id -i /root/.ssh/id_rsa.pub user@ip address     ---->after ask password give once
+         step5:#ssh user@ip address     --->here directly enter into server without asking password
+
+8.install jenkins on redhat server:
+-----------------------------------
+        step1: sudo yum install wget git -y
+        step2:sudo yum install java-11-openjdk-devel -y
+        step3:sudo wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins.io/redhat/jenkins.repo
+        step4:sudo rpm --import http://pkg.jenkins.io/redhat/jenkins.io.key
+        step5:sudo yum install jenkins -y
+        step6:sudo systemctl start jenkins
+        step7:sudo systemctl enable jenkins
+        step8:http://<jenkins-ip>:8080
+
+9.install maven on redhat servers:
+-----------------------------------
+         sudo yum install maven
+10:how do create a user in aws redhat servers:
+---------------------------------------------
+           step1:sudo useradd roja
+           step2:sudo passwd roja     --->to set password
+           step3:sudo vi /etc/ssh/sshd_config          ----->here passwordauthentication no changed to yes
+           step4:sudo systemctl restart sshd
+                    successfully connected to new user
+           step5:sudo visudo    --->for sudo permission to new user  --->  roja  ALL=(ALL)    ALL
+
+11.if u stop/start server IP will change can u make that IP Static:
+-------------------------------------------------------------------      
+             step1:For static ip set elastic ips 
+             step2:in elastic ips we have an option Allocate Elastic IP address  here select Amazon's pool of IPv4 addresses and tag optional click on allocate
+             step3:after created new elastic ip in actions we have Associate Elastic IP address 
+             step4:here choose instance what instance you want allocate that elastic IP and private IP optional choose Associate
+             step5:so successfully associated with new elastic ip address to your instance this is not changed when you stop or start instance
+             step6:to delete elastic ip click on actions we have release elastic ip address then successfully deleted your elastic ip before that disallocate elastic ip address.
+
+12.Explain the versions of tools using in your project:
+---------------------------------------------------------
+          tools                     versions              latest
+         ------                     --------              -------
+          Git                        2.22                  2.32
+          Maven                      3.6.0                 3.8.1	
+          java                       7                      11
+          tomcat                     7.0.109              9.0.48
+          jenkins                    2.200                 2.300  
+          ubuntu                     18.04                 20.04
+          docker                     18.01                 19.03
+          kubernetes                 1.15                  1.21
+          Nagios                     4.4.4                4.4.6
+          Ansible                    2.5                   2.11
+          terraform                  0.15.1                1.0.1 
+
+
+13:how do you monitor your servers(tools): 
+         for monitor we use nagios.so we see nagios installations     
+                sudo apt-get update
+                sudo apt install -y build-essential apache2 php openssl perl make
+                sudo useradd nagios
+                sudo apt install apache2 libapache2-mod-php php
+                sudo apt install wget unzip zip autoconf gcc libc6 make apache2-utils libgd-dev
+                sudo usermod -a -G nagios www-data
+                sudo wget https://assets.nagios.com/downloads/nagioscore/releases/nagios-4.4.6.tar.gz
+                sudo tar -xvf nagios-4.4.6.tar.gz
+                cd nagios-4.4.6/
+                sudo ./configure --with-httpd-conf=/etc/apache2/sites-enabled
+                sudo make all
+                sudo make install
+                sudo make install-init
+                sudo make install-commandmode
+                sudo vi /usr/local/nagios/etc/objects/contacts.cfg    ---->update ur email address   ---->optional
+                sudo systemctl enable nagios.service
+                sudo make install-config
+                sudo make install-webconf
+                sudo htpasswd -c /usr/local/nagios/etc/htpasswd.users nagiosadmin         --->here nagiosadmin user password need to provide
+                sudo a2enmod cgi
+                sudo systemctl restart apache2
+                sudo systemctl start nagios
+                sudo systemctl enable nagios
+                sudo apt install libmcrypt-dev make libssl-dev bc gawk dc build-essential snmp libnet-snmp-perl gettext libldap2-dev smbclient fping libmysqlclient-dev libdbi-dev
+                sudo wget https://github.com/nagios-plugins/nagios-plugins/archive/release-2.3.3.tar.gz      -->nagios plug in
+                sudo tar -xvf release-2.3.3.tar.gz
+                cd nagios-plugins-release-2.3.3/
+                sudo ./tools/setup
+                sudo ./configure
+                sudo make
+                sudo make install
+                sudo ls /usr/local/nagios/libexec/
+                sudo systemctl restart nagios.service
+                sudo /usr/local/nagios/bin/nagios -v    ---->to see version of nagios
+
+14.how to take entire server backup in AWS:
+---------------------------------------------   
+        create snapshots of your instance 
+           goto volumes--> actions -->create snapshot-->give description backupdate  --->create
+             create volume for snapshot
+             select snapshot create image from image we launch server that is exactly original server
+        create image for instance that need backup
+             instance need to stop --->actions -->images and templetes-->create image-->ubuntu-backup-->give date in description-->no reboot click enable -->create image
+             next directly launch instance from my AMI same instance created  
+15.most used 50 linux commands:
+--------------------------------
+1.ls
+2.df -h
+3.top
+4.ps -ef
+5.touch filename
+6.mkdir dirname  
+7.clear
+8.history
+9.date
+10.adduser username
+11.userdel username
+12.vi filename
+13.wget url
+14.apt-get update
+15.apt-get install packagename
+16.ll
+17.ls -lt
+18.ls -ltr
+19.cp source path of file  distination path of file
+20.mv source path of file  distination path of file    
+21.mv oldname newname
+22.scp source path of file  username@ipaddress:distination path
+23.ssh username@ipaddress
+24.chmod 777 dirname
+25.kill -9 processid
+26.kill -15 processid
+27.ps -ef | grep givename
+28.sudo tar -xvf tarfile
+29.sudo passwd username
+30.sudo systemctl start servicename
+31.sudo systemctl status servicename
+32.sudo service ssh restart
+33.whoami
+34.who
+35.cal 2021
+36.du -h filename
+37.cp -rf source path of direcyory  distination path of directory
+38.cat /etc/passwd
+39.cat /etc/os-release
+40.vi /etc/hostname
+41.sudo su
+42.sudo su username
+43.mv -f source path of direcyory  distination path of directory
+44.sudo find / -name filename
+45.sudo timedatectl set-timezone Asia/Kolkata
+46.sudo systemctl stop servicename  
+47.sudo rm filename
+48.sudo rm filename1 filename2
+49.sudo rm -rf directoryname
+50.exit
+     
+          
+
+
+
+
+           
+
+
+                
+
+
+
+
+
+
+
+
+
+
+                             
+       
+
+
+                      
+             
+
+
+
+

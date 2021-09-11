@@ -1,0 +1,34 @@
+Ansible Vault:
+
+Most of the times when sensitive or confidential data need to be protected in the playbook, 
+then it can be encrypted rather than just keeping it in a text file which is readable by all. 
+Ansible Vault allows you to encrypt the playbook to protect the confidential data. 
+ 
+
+$ansible-vault create jobagreement.yml     --->set passwd for jobagreement.yml
+
+---
+- hosts: servers
+  become: true
+  tasks:
+  - name: Copying Confidential Job Agreement
+    copy: content="This is a Confidential Job Agreement" dest=/opt/jobagreement.txt
+
+   you get error: ERROR! Unexpected Exception, this is probably a bug: [Errno 13] Permission denied: 
+ to solve that error /.ansible/tmp give full permissions  --> $sudo chmod 777 tmp
+
+
+$cat jobagreement.yml         --->it shows encrypted file not visible exact data
+
+$ansible-vault encrypt existingfile.yml     ---->to encrypt alredy existing file
+
+
+$ ansible-vault view jobagreement.yml         ----> view file
+
+$ ansible-vault edit users.yml               ----> edit file
+
+$ ansible-vault rekey jobagreement.yml        --->for changing passwrd
+
+$ ansible-playbook users.yml --ask-vault-pass      ---> run playbook that is encrypted
+
+$ ansible-vault decrypt jobagreement.yml               --->decrypt the file manually
